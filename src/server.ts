@@ -57,7 +57,7 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Only start the server if this file is run directly (not when imported)
+// Only start server if this file is run directly (not when imported)
 if (require.main === module) {
   const server = app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);

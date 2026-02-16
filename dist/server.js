@@ -9,24 +9,26 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const path_1 = __importDefault(require("path"));
 const db_1 = require("./config/db");
 const students_1 = __importDefault(require("./routes/students"));
-dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../.env.local') });
+const offerRoutes_1 = __importDefault(require("./routes/offerRoutes"));
+// Load environment variables from .env.local in development
+if (process.env.NODE_ENV !== 'production') {
+    const envPath = path_1.default.resolve(__dirname, '../.env.local');
+    dotenv_1.default.config({ path: envPath });
+    console.log('🔧 Loaded environment variables from .env.local');
+}
 const app = (0, express_1.default)();
 // Middleware
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
-// MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI;
-if (!MONGODB_URI) {
-    console.error("❌ MongoDB URI is not defined in environment variables");
-    process.exit(1);
-}
 // Connect to MongoDB
 (0, db_1.connectDB)().catch(err => {
     console.error("❌ Failed to connect to MongoDB:", err);
     process.exit(1);
 });
+console.log('🚀 Starting server...');
 // Routes
 app.use("/api/students", students_1.default);
+app.use("/api/offers", offerRoutes_1.default);
 // Health Check Endpoint
 app.get("/health", (_req, res) => {
     res.status(200).json({ status: "OK", message: "Server is running" });

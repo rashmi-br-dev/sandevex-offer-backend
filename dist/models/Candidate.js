@@ -34,18 +34,56 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const CandidateSchema = new mongoose_1.Schema({
-    fullName: String,
-    email: { type: String, required: true, unique: true },
-    mobile: String,
-    preferredDomain: String,
-    assignmentSent: Boolean,
-    sentAt: Date,
+const StatusHistorySchema = new mongoose_1.Schema({
     status: {
         type: String,
-        enum: ["Pending", "Accepted", "Declined"],
-        default: "Pending"
+        enum: ["Pending", "Offer Sent", "Accepted", "Declined"],
+        required: true
+    },
+    changedAt: {
+        type: Date,
+        default: Date.now
+    },
+    notes: String
+});
+const CandidateSchema = new mongoose_1.Schema({
+    fullName: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    mobile: String,
+    preferredDomain: String,
+    offerStatus: {
+        current: {
+            type: String,
+            enum: ["Pending", "Offer Sent", "Accepted", "Declined"],
+            default: "Pending"
+        },
+        offerSentAt: Date,
+        respondedAt: Date,
+        statusHistory: [StatusHistorySchema]
+    },
+    assignmentDetails: {
+        sent: {
+            type: Boolean,
+            default: false
+        },
+        sentAt: Date,
+        assignmentUrl: String
+    },
+    studentId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'Student'
     }
-}, { timestamps: true });
+}, {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
 exports.default = mongoose_1.default.model("Candidate", CandidateSchema);
 //# sourceMappingURL=Candidate.js.map

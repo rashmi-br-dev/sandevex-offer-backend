@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, CallbackWithoutResultAndOptionalError } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 interface IStatusHistory {
     status: "Pending" | "Offer Sent" | "Accepted" | "Declined";
@@ -80,33 +80,5 @@ const CandidateSchema = new Schema<ICandidate>(
         toObject: { virtuals: true }
     }
 );
-
-// Add a pre-save hook to track status changes
-CandidateSchema.pre('save', function(next: CallbackWithoutResultAndOptionalError) {
-    const candidate = this as unknown as ICandidate & Document;
-    
-    // If status is being modified, add to history
-    if (this.isModified('offerStatus.current')) {
-        if (!candidate.offerStatus.statusHistory) {
-            candidate.offerStatus.statusHistory = [];
-        }
-        
-        candidate.offerStatus.statusHistory.push({
-            status: candidate.offerStatus.current,
-            changedAt: new Date()
-        });
-        
-        // Update timestamps based on status
-        if (candidate.offerStatus.current === "Offer Sent" && !candidate.offerStatus.offerSentAt) {
-            candidate.offerStatus.offerSentAt = new Date();
-        } else if ((candidate.offerStatus.current === "Accepted" || 
-                   candidate.offerStatus.current === "Declined") && 
-                   !candidate.offerStatus.respondedAt) {
-            candidate.offerStatus.respondedAt = new Date();
-        }
-    }
-    
-    next();
-});
 
 export default mongoose.model<ICandidate>("Candidate", CandidateSchema);

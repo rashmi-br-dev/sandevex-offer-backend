@@ -1,6 +1,6 @@
 import express, { Request, Response, Router } from 'express';
 import { body, validationResult, query } from 'express-validator';
-import Offer, { IOffer } from '../models/Offer';
+import Offer from '../models/Offer';
 import { Student } from '../models/Student';
 import { sendEmail } from '../services/emailService';
 import { Types } from 'mongoose';
@@ -12,7 +12,7 @@ router.post('/create-record', [
   body('candidateId').notEmpty().withMessage('Candidate ID is required'),
   body('email').isEmail().withMessage('Valid email is required'),
   body('status').isIn(['pending', 'accepted', 'declined']).withMessage('Invalid status'),
-], async (req: Request, res: Response) => {
+], async (req: Request, res: Response): Promise<Response> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -47,7 +47,7 @@ router.post('/create-record', [
 
     await offer.save();
 
-    res.status(201).json({
+    return res.status(201).json({
       message: 'Offer record created successfully',
       offer: {
         id: offer._id,
@@ -61,7 +61,7 @@ router.post('/create-record', [
 
   } catch (error: any) {
     console.error('Error creating offer record:', error);
-    res.status(500).json({
+    return res.status(500).json({
       message: 'Failed to create offer record',
       error: error?.message || 'Unknown error'
     });
@@ -72,7 +72,7 @@ router.post('/create-record', [
 router.post('/send-offer', [
   body('candidateId').notEmpty().withMessage('Candidate ID is required'),
   body('emailData').isObject().withMessage('Email data is required'),
-], async (req: Request, res: Response) => {
+], async (req: Request, res: Response): Promise<Response> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -110,7 +110,7 @@ router.post('/send-offer', [
     // Send email
     await sendEmail(emailData);
 
-    res.status(201).json({
+    return res.status(201).json({
       message: 'Offer sent successfully',
       offer: {
         id: offer._id,
@@ -125,7 +125,7 @@ router.post('/send-offer', [
 
   } catch (error: any) {
     console.error('Error sending offer:', error);
-    res.status(500).json({
+    return res.status(500).json({
       message: 'Failed to send offer',
       error: error?.message || 'Unknown error'
     });
@@ -133,7 +133,7 @@ router.post('/send-offer', [
 });
 
 // Handle offer response (accept/decline)
-router.post('/:offerId/:action', async (req: Request, res: Response) => {
+router.post('/:offerId/:action', async (req: Request, res: Response): Promise<Response> => {
   try {
     const { offerId, action } = req.params;
 
@@ -185,14 +185,14 @@ router.post('/:offerId/:action', async (req: Request, res: Response) => {
       `
     });
 
-    res.json({
+    return res.json({
       message: `Offer ${offer.status} successfully`,
       status: offer.status
     });
 
   } catch (error: any) {
     console.error('Error processing offer response:', error);
-    res.status(500).json({
+    return res.status(500).json({
       message: 'Failed to process offer response',
       error: error?.message || 'Unknown error'
     });
@@ -200,7 +200,7 @@ router.post('/:offerId/:action', async (req: Request, res: Response) => {
 });
 
 // Get offer status
-router.get('/:candidateId/status', async (req: Request, res: Response) => {
+router.get('/:candidateId/status', async (req: Request, res: Response): Promise<Response> => {
   try {
     const { candidateId } = req.params;
 
@@ -223,7 +223,7 @@ router.get('/:candidateId/status', async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'No offer found for this candidate' });
     }
 
-    res.json({
+    return res.json({
       status: offer.status,
       sentAt: offer.sentAt,
       respondedAt: offer.respondedAt,
@@ -231,7 +231,7 @@ router.get('/:candidateId/status', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('Error getting offer status:', error);
-    res.status(500).json({
+    return res.status(500).json({
       message: 'Failed to get offer status',
       error: error?.message || 'Unknown error'
     });
@@ -242,7 +242,7 @@ router.get('/:candidateId/status', async (req: Request, res: Response) => {
 router.post('/respond', [
   body('email').isEmail().withMessage('Valid email is required'),
   body('status').isIn(['accept', 'decline']).withMessage('Invalid status')
-], async (req: Request, res: Response) => {
+], async (req: Request, res: Response): Promise<Response> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -286,17 +286,16 @@ router.post('/respond', [
       lastUpdated: now
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       status: offer.status,
       message: status === 'accept'
         ? 'Offer accepted successfully! Welcome to Sandevex!'
         : 'Offer declined successfully. Thank you for your response.'
     });
-
   } catch (error: any) {
     console.error('Error processing offer response:', error);
-    res.status(500).json({
+    return res.status(500).json({
       message: 'Error processing offer response',
       error: error?.message || 'Unknown error'
     });
@@ -306,7 +305,7 @@ router.post('/respond', [
 // Check offer status without modifying it
 router.get('/check-status', [
   query('email').isEmail().withMessage('Valid email is required')
-], async (req: Request, res: Response) => {
+], async (req: Request, res: Response): Promise<Response> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -337,7 +336,7 @@ router.get('/check-status', [
       await offer.save();
     }
 
-    res.json({
+    return res.json({
       success: true,
       offer: {
         id: offer._id,
@@ -347,10 +346,9 @@ router.get('/check-status', [
         respondedAt: offer.respondedAt
       }
     });
-
   } catch (error: any) {
     console.error('Error checking offer status:', error);
-    res.status(500).json({
+    return res.status(500).json({
       message: 'Error checking offer status',
       error: error?.message || 'Unknown error'
     });

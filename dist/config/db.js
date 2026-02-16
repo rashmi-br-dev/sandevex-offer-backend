@@ -5,10 +5,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.connectDB = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
-if (!process.env.MONGODB_URI) {
-    throw new Error('MONGODB_URI environment variable is not set');
-}
+const dotenv_1 = __importDefault(require("dotenv"));
+const path_1 = __importDefault(require("path"));
+// Load environment variables from .env.local
+const envPath = path_1.default.resolve(__dirname, '../../.env.local');
+dotenv_1.default.config({ path: envPath });
+// Get MongoDB URI from environment variables
 const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+    console.error('❌ Error: MONGODB_URI environment variable is not set');
+    console.error('Please make sure you have a .env.local file in the backend directory with MONGODB_URI');
+    process.exit(1);
+}
+console.log('📡 MongoDB URI: Configured');
 const connectDB = async () => {
     try {
         if (mongoose_1.default.connection.readyState >= 1) {

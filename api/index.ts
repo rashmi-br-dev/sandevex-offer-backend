@@ -10,17 +10,21 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://sandevex-offer-email.vercel.app'],
+  origin: ['http://localhost:3000', 'https://sandevex-offer-email.vercel.app', 'https://sandevex-offer-frontend.vercel.app'],
   credentials: true
 }));
 app.use(express.json());
 
 // MongoDB connection
-if (!mongoose.connection.readyState) {
-  const MONGODB_URI = process.env.MONGODB_URI;
-  if (MONGODB_URI) {
-    mongoose.connect(MONGODB_URI);
-  }
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error('❌ MONGODB_URI environment variable is not set');
+} else {
+  // Connect to MongoDB
+  mongoose.connect(MONGODB_URI)
+    .then(() => console.log('✅ MongoDB connected successfully'))
+    .catch(err => console.error('❌ MongoDB connection error:', err));
 }
 
 // Routes

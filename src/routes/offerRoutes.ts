@@ -4,15 +4,23 @@ import Offer from '../models/Offer';
 import { Student } from '../models/Student';
 import { sendSimpleEmail } from '../services/simpleEmailService';
 import { Types } from 'mongoose';
+import mongoose from 'mongoose'; // Import mongoose
 
 const router: Router = express.Router();
 
 // GET all offers with student details
 router.get('/', async (_req: Request, res: Response): Promise<Response> => {
   try {
+    console.log('Fetching offers from database...');
+    console.log('Database name:', mongoose.connection.name);
+    console.log('Database host:', mongoose.connection.host);
+    
     const offers = await Offer.find()
       .populate('candidateId', 'fullName mobile')
       .sort({ sentAt: -1 });
+    
+    console.log('Found offers:', offers.length);
+    console.log('Offers data:', JSON.stringify(offers, null, 2));
 
     return res.json({ offers });
   } catch (error: any) {

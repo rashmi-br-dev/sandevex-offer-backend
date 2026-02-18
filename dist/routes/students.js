@@ -27,6 +27,20 @@ router.get('/', async (_req, res) => {
         res.status(500).json({ success: false, error: 'Failed to fetch students' });
     }
 });
+// Get student by ID
+router.get('/:id', async (req, res) => {
+    try {
+        const student = await Student_1.Student.findById(req.params.id);
+        if (!student) {
+            return res.status(404).json({ success: false, error: 'Student not found' });
+        }
+        return res.json({ success: true, student });
+    }
+    catch (error) {
+        console.error('Error fetching student:', error);
+        return res.status(500).json({ success: false, error: 'Failed to fetch student' });
+    }
+});
 // Submit student application
 router.post('/', async (req, res) => {
     try {

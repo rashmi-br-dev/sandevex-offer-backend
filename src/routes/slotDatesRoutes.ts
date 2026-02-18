@@ -1,9 +1,9 @@
-import express, { Request, Response, Router } from 'express';
+import express, { Request, Response } from 'express';
 
 const router = express.Router();
 
 // GET available dates for slot booking
-router.get('/dates', async (_req: Request, res: Response): Promise<Response> => {
+router.get('/dates', async (_req: Request, res: Response) => {
   try {
     // Generate available dates (next 7 days including today)
     const dates = [];

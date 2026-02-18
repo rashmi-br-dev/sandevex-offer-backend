@@ -35,10 +35,10 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Student not found' });
     }
     
-    res.json({ success: true, student });
+    return res.json({ success: true, student });
   } catch (error) {
     console.error('Error fetching student:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch student' });
+    return res.status(500).json({ success: false, error: 'Failed to fetch student' });
   }
 });
 

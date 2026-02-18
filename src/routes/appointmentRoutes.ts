@@ -198,7 +198,7 @@ Sandevex Hiring Team
 });
 
 // GET all appointments (for admin)
-router.get('/', async (req: Request, res: Response): Promise<Response> => {
+router.get('/', async (_req: Request, res: Response): Promise<Response> => {
   try {
     const appointments = await Appointment.find()
       .populate('candidateId', 'fullName email')

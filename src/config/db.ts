@@ -1,10 +1,8 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import path from 'path';
 
-// Load environment variables from .env.local
-const envPath = path.resolve(__dirname, '../../.env.local');
-dotenv.config({ path: envPath });
+// Load environment variables
+dotenv.config();
 
 // Get MongoDB URI from environment variables
 const MONGODB_URI = process.env.MONGODB_URI;

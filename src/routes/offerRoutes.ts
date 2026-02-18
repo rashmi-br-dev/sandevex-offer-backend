@@ -2,10 +2,27 @@ import express, { Request, Response, Router } from 'express';
 import { body, validationResult, query } from 'express-validator';
 import Offer from '../models/Offer';
 import { Student } from '../models/Student';
-import { sendEmail } from '../services/emailService';
+import { sendSimpleEmail } from '../services/simpleEmailService';
 import { Types } from 'mongoose';
 
 const router: Router = express.Router();
+
+// GET all offers with student details
+router.get('/', async (_req: Request, res: Response): Promise<Response> => {
+  try {
+    const offers = await Offer.find()
+      .populate('candidateId', 'fullName mobile')
+      .sort({ sentAt: -1 });
+
+    return res.json({ offers });
+  } catch (error: any) {
+    console.error('Error fetching offers:', error);
+    return res.status(500).json({
+      message: 'Failed to fetch offers',
+      error: error?.message || 'Unknown error'
+    });
+  }
+});
 
 // Create offer record (without sending email)
 router.post('/create-record', [
@@ -108,7 +125,22 @@ router.post('/send-offer', [
     await offer.save();
 
     // Send email
-    await sendEmail(emailData);
+    const offerMessage = `
+Dear ${emailData.to},
+
+We are pleased to offer you the opportunity to join our team!
+
+Please review the offer details and respond within 24 hours.
+
+Best regards,
+Sandevex Hiring Team
+    `;
+
+    await sendSimpleEmail({
+      to: emailData.to,
+      subject: emailData.subject || 'Job Offer from Sandevex',
+      message: offerMessage
+    });
 
     return res.status(201).json({
       message: 'Offer sent successfully',
@@ -172,17 +204,28 @@ router.post('/:offerId/:action', async (req: Request, res: Response): Promise<Re
 
     // Send confirmation email
     const student = await Student.findById(offer.candidateId);
-    await sendEmail({
+    const bookingUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/candidate/book-slot?email=${offer.email}&name=${encodeURIComponent(student?.fullName || '')}&position=${encodeURIComponent('Software Developer')}&candidateId=${offer.candidateId}`;
+    
+    const confirmationMessage = `
+Dear ${student?.fullName || 'Candidate'},
+
+Your offer has been ${offer.status}!
+
+${offer.status === 'accepted' ? 
+  `Congratulations! Welcome to Sandevex!
+
+Please book a time slot to collect your offer letter:
+${bookingUrl}` : 
+  'Thank you for your response. We wish you the best in your future endeavors.'}
+
+Best regards,
+Sandevex Hiring Team
+    `;
+
+    await sendSimpleEmail({
       to: offer.email,
       subject: `Your Offer Has Been ${offer.status}`,
-      html: `
-        <div>
-          <p>Hello ${student?.fullName || 'Candidate'},</p>
-          <p>Your offer has been <strong>${offer.status}</strong>.</p>
-          <p>Thank you for your response.</p>
-          <p>Best regards,<br/>Sandevex Hiring Team</p>
-        </div>
-      `
+      message: confirmationMessage
     });
 
     return res.json({

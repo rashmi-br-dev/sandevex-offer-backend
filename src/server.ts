@@ -1,17 +1,14 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import path from "path";
 import { connectDB } from "./config/db";
 import studentRoutes from "./routes/students";
 import offerRoutes from "./routes/offerRoutes";
+import slotRoutes from "./routes/slotRoutes";
+import appointmentRoutes from "./routes/appointmentRoutes";
 
-// Load environment variables from .env.local in development
-if (process.env.NODE_ENV !== 'production') {
-  const envPath = path.resolve(__dirname, '../.env.local');
-  dotenv.config({ path: envPath });
-  console.log('🔧 Loaded environment variables from .env.local');
-}
+// Load environment variables
+dotenv.config();
 
 const app = express();
 
@@ -22,14 +19,13 @@ app.use(express.json());
 // Connect to MongoDB
 connectDB().catch(err => {
   console.error("❌ Failed to connect to MongoDB:", err);
-  process.exit(1);
 });
-
-console.log('🚀 Starting server...');
 
 // Routes
 app.use("/api/students", studentRoutes);
 app.use("/api/offers", offerRoutes);
+app.use("/api/slots", slotRoutes);
+app.use("/api/appointments", appointmentRoutes);
 
 // Health Check Endpoint
 app.get("/health", (_req: express.Request, res: express.Response) => {
@@ -55,39 +51,12 @@ app.use((req, res) => {
   });
 });
 
+// Start server for local development
 const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
+  console.log(`📡 API available at: http://localhost:${PORT}/api`);
+});
 
-// Only start server if this file is run directly (not when imported)
-if (require.main === module) {
-  const server = app.listen(PORT, () => {
-    console.log(`🚀 Server is running on http://localhost:${PORT}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/health`);
-    console.log(`📚 API Docs: http://localhost:${PORT}/api-docs`);
-  });
-
-  // Handle unhandled promise rejections
-  process.on('unhandledRejection', (err: Error) => {
-    console.error('Unhandled Rejection:', err);
-    server.close(() => process.exit(1));
-  });
-
-  // Handle graceful shutdown
-  process.on('SIGTERM', () => {
-    console.log('SIGTERM received. Shutting down gracefully...');
-    server.close(() => {
-      console.log('Process terminated');
-      process.exit(0);
-    });
-  });
-
-  // Handle Ctrl+C
-  process.on('SIGINT', () => {
-    console.log('SIGINT received. Shutting down gracefully...');
-    server.close(() => {
-      console.log('Process terminated');
-      process.exit(0);
-    });
-  });
-}
-
+// Export for Vercel
 export default app;
